@@ -16,7 +16,19 @@ SLOT_COORDS_PATH = "app/resources/coordinates/slot-data/"
 REID_COORDS_PATH = "app/resources/coordinates/reid-data/"
 for i,cam_id in enumerate(CAMS):
     print(f"Xử lý camera {i} với cam_id: {cam_id}")
-    cap = cv2.VideoCapture(cam_id)
+    cap = None
+    if cam_id == "0":
+        gst_pipeline = (
+        "nvarguscamerasrc ! "
+        "video/x-raw(memory:NVMM), width=416, height=416, framerate=30/1 ! "
+        "nvvidconv ! "
+        "video/x-raw, format=BGRx ! "
+        "videoconvert ! "
+        "video/x-raw, format=BGR ! appsink"
+        )
+        cap = cv2.VideoCapture(gst_pipeline, cv2.CAP_GSTREAMER)
+    else:
+        cap = cv2.VideoCapture(cam_id)
     # cap.set(cv2.CAP_PROP_POS_FRAMES, 30)
     time.sleep(1)
     ret, frame = cap.read()
