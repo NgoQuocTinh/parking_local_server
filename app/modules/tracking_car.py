@@ -119,8 +119,19 @@ def process_video(video_path, window_name, model_path, cam_id,
     except Exception:
         # fallback nếu không có GPU / lỗi
         model = YOLO(model_path, verbose=False)
-
-    cap = cv2.VideoCapture(video_path)
+    cap = None
+    if video_path == "0":
+        gst_pipeline = (
+        "nvarguscamerasrc ! "
+        "video/x-raw(memory:NVMM), width=416, height=416, framerate=30/1 ! "
+        "nvvidconv ! "
+        "video/x-raw, format=BGRx ! "
+        "videoconvert ! "
+        "video/x-raw, format=BGR ! appsink"
+        )
+        cap = cv2.VideoCapture(gst_pipeline, cv2.CAP_GSTREAMER)
+    else:
+        cap = cv2.VideoCapture(video_path)
 
     # --- CHỜ TẤT CẢ CAMERA CÙNG SẴN SÀNG ---
     print(f"Camera {cam_id} ready. Waiting for others...")
