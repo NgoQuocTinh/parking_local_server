@@ -28,18 +28,12 @@ def start_connect_bgm220():
         ser = serial.Serial(port, baudrate, timeout=1)
         print(f"[SUCCESS] Kết nối thành công với {port}")
         threading.Thread(target=play_sound, args=('connected_bgm220.mp3',)).start()
-        # API arduino
-        # 0: barie_in:0 (đóng barie vào)
-        # 1: barie_in:1 (mở barie vào)
-        # 2: barie_out:0 (đóng barie ra)
-        # 3: barie_out:1 (mở barie ra)
-        # 4: update_slot (cập nhật lại số chỗ trống và hướng đi)
         while True:
             time.sleep(0.2)  # Giảm từ 1s xuống 0.2s để đọc nhanh hơn
             # DEBUG: Kiểm tra buffer
             if ser.in_waiting > 0:
-                print(f"[DEBUG] Bytes available in buffer: {ser.in_waiting}")
-            
+                # print(f"[DEBUG] Bytes available in buffer: {ser.in_waiting}")
+                pass
             # Danh sách dữ liệu từ Arduino
             if globals.update_display:
                 if globals.slot_recommend == "" or len(globals.parking_num_slot) == 0:
@@ -49,19 +43,19 @@ def start_connect_bgm220():
                     time.sleep(0.2)  # Đợi một chút để Arduino xử lý
                     ser.write(f'parking_num_slot:{",".join(map(str, globals.parking_num_slot))}\n'.encode())
                     globals.update_display = False
-                    print("[SEND] Cập nhật màn hình hiển thị")
+                    # print("[SEND] Cập nhật màn hình hiển thị")
             
             # Kiểm tra ánh sáng (chỉ xử lý khi có dữ liệu)
             current_light = globals.get_light()
-            if globals.turn_light and globals.light_state == False:
+            if globals.turn_light and globals.light_state == False and globals.auto_light_mode == False:
                 ser.write(b'turn_on_light\n')
                 print("[SEND] Bật đèn chiếu sáng")
                 globals.light_state = True
-            elif globals.turn_light == False and globals.light_state == True:
+            elif globals.turn_light == False and globals.light_state == True and globals.auto_light_mode == False:
                 ser.write(b'turn_off_light\n')
                 print("[SEND] Tắt đèn chiếu sáng")
                 globals.light_state = False
-            if current_light is not None:
+            if current_light is not None and globals.auto_light_mode:
                 if current_light < 100 and globals.light_state == False:
                     ser.write(b'turn_on_light\n')
                     threading.Thread(target=play_sound, args=('troi-toi.mp3',)).start()
@@ -106,16 +100,16 @@ def start_connect_bgm220():
                     data = ser.readline().decode('utf-8').strip()
                     
                     # DEBUG: In raw data
-                    print(f"[RECEIVE] Raw data: '{data}'")
+                    # print(f"[RECEIVE] Raw data: '{data}'")
                     
                     if not data:
-                        print("[WARNING] Empty data received")
+                        # print("[WARNING] Empty data received")
                         continue
                     
                     # Kiểm tra định dạng và tách key, value
                     if ":" in data:
                         key, value = data.split(":", 1)
-                        print(f"[PARSE] Key: '{key}', Value: '{value}'")
+                        # print(f"[PARSE] Key: '{key}', Value: '{value}'")
                         
                         # Xe vào
                         if key == "car_in":
@@ -148,9 +142,11 @@ def start_connect_bgm220():
                                 globals.qr_code = ""
                                 globals.car_out = False
                         else:
-                            print(f"[WARNING] Unknown key: '{key}'")
+                            # print(f"[WARNING] Unknown key: '{key}'")
+                            pass
                     else:
-                        print(f"[WARNING] Invalid data format (no ':' separator): '{data}'")
+                        pass
+                        # print(f"[WARNING] Invalid data format (no ':' separator): '{data}'")
                         
                 except UnicodeDecodeError as e:
                     print(f"[ERROR] Decode error: {e}")
